@@ -1,0 +1,16 @@
+eclipse.preferences.version=1
+filesCopiedToWebInfLib=
+gaeDatanucleusEnabled=false
+gaeDeployDialogSettings=
+googleCloudSqlEnabled=true
+localDevMySqlEnabled=false
+prodDatabaseName=tennis
+prodDatabasePassword=danzig2
+prodDatabaseUser=mysql
+prodInstanceName=zazarie.com\:tennis\:tennis
+prodIsConfigured=true
+testDatabaseName=tennis
+testDatabasePassword=danzig2
+testDatabaseUser=mysql
+testInstanceName=zazarie.com\:tennis\:tennis
+testIsConfigured=true
