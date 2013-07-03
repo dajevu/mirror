@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+  <cron>
+    <url>/taskFindArticles</url>
+    <description>Search for new articles</description>
+    <schedule>every 5 minutes</schedule>
+  </cron>
+  
+  <cron>
+    <url>/taskSendToGlass</url>
+    <description>Send out glass timeline items.</description>
+    <schedule>every 10 minutes</schedule>
+  </cron>
+</cronentries>

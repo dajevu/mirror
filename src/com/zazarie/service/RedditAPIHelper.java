@@ -7,14 +7,20 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Date;
 import java.util.logging.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.api.client.auth.oauth2.BearerToken;
@@ -26,7 +32,10 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.mirror.model.TimelineItem;
+import com.google.appengine.api.datastore.Entity;
 import com.google.glassware.MirrorClient;
+import com.zazarie.domain.GlassRedditCredentialStore;
+import com.zazarie.domain.RedditOauthSession;
 import com.zazarie.domain.reddit.Me;
 import com.zazarie.domain.reddit.NewFeed;
 import com.zazarie.domain.reddit.RedditOauth;
@@ -35,6 +44,18 @@ import com.zazarie.domain.reddit.RedditOauth;
 public class RedditAPIHelper {
 
 	private static final Logger LOG = Logger.getLogger(RedditAPIHelper.class.getSimpleName());
+	
+	private @Value("${reddit_client_id}") String redditClientId;
+
+	private @Value("${reddit_client_secret}") String redditPass;
+	
+	private @Value("${reddit_client_token}") String redditToken;
+	
+	private @Value("${reddit_client_scope}") String redditScope;
+	
+	private static String USER_AGENT = "RedditForGlass v1 by /u/dajevu";
+	
+	private GlassRedditCredentialStore store;
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -77,16 +98,17 @@ public class RedditAPIHelper {
 	
 	//http://www.reddit.com/r/aww/new.json
 	
-	public static NewFeed getArticlesBySubreddit(String subreddit) throws Exception {
+	public static NewFeed getArticlesBySubreddit(String subreddit, int limit) throws Exception {
 		
 		ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
 
-		URL url = new URL("http://www.reddit.com/r/aww/new.json");	
+		URL url = new URL("http://www.reddit.com/r/" + subreddit  + "/top.json?limit=" + limit);	
 		
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setDoOutput(true);
 		conn.setRequestProperty("Accept", "application/json");
+		conn.setRequestProperty("User-Agent", USER_AGENT);
 		
 		conn.connect();
 		
@@ -115,6 +137,7 @@ public class RedditAPIHelper {
 		conn.setDoOutput(true);
 		conn.setRequestProperty("Accept", "application/json");
 		conn.addRequestProperty("Authorization", "Bearer " + accessToken);
+		conn.setRequestProperty("User-Agent", USER_AGENT);
 		
 		conn.connect();
 		
@@ -144,6 +167,7 @@ public class RedditAPIHelper {
 		conn.setDoOutput(true);
 		conn.setRequestProperty("Accept", "application/json");
 		conn.addRequestProperty("Authorization", "Bearer " + accessToken);
+		conn.setRequestProperty("User-Agent", USER_AGENT);
 
 		conn.connect();
 		
@@ -246,6 +270,126 @@ public class RedditAPIHelper {
 		LOG.info("Reddit json obj is: " + rOauth);
 		
 		return rOauth;
+	}
+
+	public static void vote(String accessToken, String itemId) throws Exception {
+		
+		URL url = new URL("https://oauth.reddit.com/api/vote");
+		
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("POST");
+		conn.setDoOutput(true);
+		conn.setRequestProperty("Accept", "application/json");
+		conn.addRequestProperty("Authorization", "Bearer " + accessToken);
+		conn.setRequestProperty("User-Agent", USER_AGENT);
+
+		OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
+		writer.write("dir=1&id=t3_" + itemId);
+		writer.close();
+
+		if (conn.getResponseCode() != 200) {
+			throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+		}
+
+		conn.disconnect();
+		
+	}
+	
+	public Entity checkOauthToken(String emailAddr, HttpServletRequest request) {
+		
+		// check to see whether a user entry already exists
+		Entity entity = store.findByGoogleEmail(emailAddr);
+
+		if (entity != null) {
+
+			LOG.info("Matching entity found for user in store");
+			
+			// populate the session object with the values from the datastore
+			RedditOauthSession oauthSession = new RedditOauthSession();
+			
+			// check if access token has expired, if so, refresh it
+			long expires = (Long) entity.getProperty("redditExpires");
+			
+			if (new Date().getTime() >= expires) {
+				
+				LOG.info("Refreshing expired Reddit access token");
+				
+				String basicAuth = RedditAPIHelper.buildAuthorizationHeader(redditClientId, redditPass);
+				
+				// refresh the access token
+				
+				String body = RedditAPIHelper.buildOauthBodyRefresh(WebUtil.buildUrl(request,"/authorize-reddit"), 
+						(String) entity.getProperty("redditRefreshToken"), redditClientId, redditPass, redditScope);
+				
+				RedditOauth oauth = null;
+				
+				try {
+					oauth = RedditAPIHelper.fetchAccessToken(basicAuth, body, redditToken);
+					
+					LOG.info("oauth is: " + oauth);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				// save the Reddit oauth credentials
+				entity.setProperty("redditAccessToken",  oauth.getAccess_token());
+				
+				entity.setProperty("redditRefreshToken", oauth.getRefresh_token());
+				
+				Date today = new Date();
+				
+				entity.setProperty("redditExpires", today.getTime() + (oauth.getExpires_in() * 1000));
+				
+				store.update(entity);
+				
+				return entity;
+			}
+
+			return entity;
+		}
+		
+		return null;
+	}
+
+	public String getRedditClientId() {
+		return redditClientId;
+	}
+
+	public void setRedditClientId(String redditClientId) {
+		this.redditClientId = redditClientId;
+	}
+
+	public String getRedditPass() {
+		return redditPass;
+	}
+
+	public void setRedditPass(String redditPass) {
+		this.redditPass = redditPass;
+	}
+
+	public String getRedditToken() {
+		return redditToken;
+	}
+
+	public void setRedditToken(String redditToken) {
+		this.redditToken = redditToken;
+	}
+	
+	public GlassRedditCredentialStore getStore() {
+		return store;
+	}
+
+	@Autowired(required=true)
+	public void setStore(GlassRedditCredentialStore store) {
+		this.store = store;
+	}
+
+	public String getRedditScope() {
+		return redditScope;
+	}
+
+	public void setRedditScope(String redditScope) {
+		this.redditScope = redditScope;
 	}
 
 

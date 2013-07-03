@@ -34,6 +34,13 @@ public class AuthFilter implements Filter {
 
 			HttpServletRequest httpRequest = (HttpServletRequest) request;
 			HttpServletResponse httpResponse = (HttpServletResponse) response;
+			
+			// Are we in the middle of a task?
+			if (httpRequest.getRequestURI().indexOf("task") > 0) {
+				LOG.info("Skipping task filter");
+				filterChain.doFilter(request, response);
+				return;
+			}
 
 			// Redirect to https when on App Engine since subscriptions only
 			// work over https

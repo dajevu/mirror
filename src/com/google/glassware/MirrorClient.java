@@ -137,10 +137,16 @@ public class MirrorClient {
    *        none)
    * @param attachmentData data for the attachment (or null if none)
    */
-  public static void insertTimelineItem(Credential credential, TimelineItem item,
+  public static String insertTimelineItem(Credential credential, TimelineItem item,
       String attachmentContentType, byte[] attachmentData) throws IOException {
+	  
     Mirror.Timeline timeline = getMirror(credential).timeline();
-    timeline.insert(item, new ByteArrayContent(attachmentContentType, attachmentData)).execute();
+    
+    TimelineItem tline = timeline.insert(item, new ByteArrayContent(attachmentContentType, attachmentData)).execute();
+    
+    LOG.info("Inserted timeline item is: " + tline.getId() + "tline source id is: " + tline.getSourceItemId());
+    
+    return tline.getId();
 
   }
 

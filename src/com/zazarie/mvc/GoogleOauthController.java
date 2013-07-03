@@ -23,21 +23,19 @@ import com.google.api.client.http.GenericUrl;
 import com.google.appengine.api.datastore.Entity;
 import com.zazarie.domain.GlassRedditCredentialStore;
 import com.zazarie.domain.GoogleOauthSession;
-import com.zazarie.service.NewUserBootstrapper;
+import com.zazarie.service.MirrorAPIHelper;
 import com.zazarie.service.WebUtil;
 
 @Controller
 public class GoogleOauthController {
 
-	private static final Logger LOG = Logger.getLogger(MainController.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(GoogleOauthController.class.getSimpleName());
 
 	private @Value("${google_client_id}") String googleClientId;
 
 	private @Value("${google_client_secret}") String googlePass;
 	
 	private AuthUtil authUtil;
-	
-	private NewUserBootstrapper newUserBootstrapper;
 	
 	private GlassRedditCredentialStore store;
 
@@ -89,7 +87,7 @@ public class GoogleOauthController {
 				flow.createAndStoreCredential(tokenResponse, userId);
 
 				// The dance is done. Do our bootstrapping stuff for this user
-				newUserBootstrapper.bootstrapNewUser(request, userId);
+				//newUserBootstrapper.bootstrapNewUser(request, userId);
 				
 				HttpSession session = request.getSession();
 				
@@ -112,7 +110,15 @@ public class GoogleOauthController {
 				
 				entity.setProperty("email", session.getAttribute("googleEmail"));
 				
-				store.update(entity);				
+				store.update(entity);			
+				
+				LOG.info("Running on " + request.getServerName().contains("appspot.com") + " scheme: " + request.getScheme());
+				
+				// now, let's automatically create a new subscription if we are in prod
+				if (request.getServerName().contains("appspot.com") && request.getScheme().equals("https")) {
+					LOG.info("Running in production - will setup subscription now");
+					MirrorAPIHelper.insertSubscription(MirrorAPIHelper.getCredential(oauthSession), WebUtil.buildUrl(request, "/notify"), userId, "timeline");
+				}
 
 				// Redirect back to index
 				response.sendRedirect(WebUtil.buildUrl(request, "/"));
@@ -164,15 +170,6 @@ public class GoogleOauthController {
 	@Autowired(required=true)
 	public void setAuthUtil(AuthUtil authUtil) {
 		this.authUtil = authUtil;
-	}
-
-	public NewUserBootstrapper getNewUserBootstrapper() {
-		return newUserBootstrapper;
-	}
-
-	@Autowired(required=true)
-	public void setNewUserBootstrapper(NewUserBootstrapper newUserBootstrapper) {
-		this.newUserBootstrapper = newUserBootstrapper;
 	}
 	
 	public GlassRedditCredentialStore getStore() {
