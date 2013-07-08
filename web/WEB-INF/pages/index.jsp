@@ -52,7 +52,7 @@
 		<div class="span12">
 			<div class="hero-unit" style="padding: 30px !important">
 				<h1>
-					Welcome to Reddit for Glass!
+					Welcome to Reddit for Glass! :)
 				</h1>
 			</div>
 			<div class="row-fluid">
