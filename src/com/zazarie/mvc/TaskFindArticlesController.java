@@ -83,12 +83,12 @@ public class TaskFindArticlesController {
 	    	
 	    	if (feeds != null) {
 		    	for (Children feed : feeds.getData().getChildren()) {
-		    		LOG.info("Processing..." + feed.getData().getTitle() + " article Id is: " + feed.getData().getId());
+		    		LOG.info("Processing..." + feed.getData().getTitle() + " id: " + feed.getData().getId() + " url:" + feed.getData().getUrl());
 		    		
 		    		// only process images for now that contain JPG or jpg
-		    		if (feed.getData().getUrl().toUpperCase().indexOf(".JPG") > 0)
+		    		if (feed.getData().getUrl().toUpperCase().indexOf(".JPG") > 0) {
 		    			article = DBHelper.addArticle(userEntity.getKey().getName(), feed.getData().getId(), feed.getData().getUrl(), feed.getData().getTitle());
-					
+		    		}
 		    	}
 	    	}
 	    	
