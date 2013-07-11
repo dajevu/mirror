@@ -68,7 +68,10 @@ public class TaskFindArticlesController {
 	    	
 	    	NewFeed feeds = null;
 	    	
+	    	feeds = RedditAPIHelper.getArticlesBySubreddit("aww", 10);
+	    	
 	    	// for now, I'm only going to call reddit once, instead of for each user. See their API rules
+	    	/*
 	    	if (firstTime) {
 				try {
 					//feed = RedditAPIHelper.getNewArticles( ((RedditOauthSession) request.getSession().getAttribute("redditOauthSession")).getAccessToken());
@@ -78,6 +81,7 @@ public class TaskFindArticlesController {
 					e.printStackTrace();
 				}
 	    	}
+	    	*/
 	    		    	
 	    	LOG.info("feeds is: " + feeds);
 	    	
