@@ -79,7 +79,7 @@ public class TaskSendToGlass {
 			// And custom actions
 			List<MenuValue> menuValues = new ArrayList<MenuValue>();
 			
-			menuValues.add(new MenuValue().setIconUrl(WebUtil.buildUrl(request, "/static/images/drill.png")).setDisplayName("UpVote"));
+			menuValues.add(new MenuValue().setIconUrl(WebUtil.buildUrl(request, "/img/redditUpvote.png")).setDisplayName("UpVote"));
 			
 			menuItemList.add(new MenuItem().setValues(menuValues).setId("upVote").setAction("CUSTOM"));
 
@@ -87,7 +87,7 @@ public class TaskSendToGlass {
 
 			try {
 
-				URL imageUrl = new URL((String) article.getProperty(DBHelper.DB_THUMBNAIL_URL));
+				URL imageUrl = new URL((String) article.getProperty(DBHelper.DB_ARTICLE_URL));
 				
 				BufferedReader in = new BufferedReader(new InputStreamReader(imageUrl.openStream()));
 

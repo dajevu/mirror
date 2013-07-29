@@ -31,10 +31,10 @@ public class DBHelper {
 	public static String DB_TIMELINE_ID = "timelineId";
 	public static String DB_REDDIT_ID = "redditId";
 	public static String DB_SEND_TO_GLASS_DATE = "sentToGlassDate";
-	public static String DB_THUMBNAIL_URL = "articleThumbnailUrl";
+	public static String DB_ARTICLE_URL = "articleUrl";
 	public static String DB_ARTICLE_TITLE = "articleTitle";
 	
-	public static Entity addArticle(String userId, String redditArticleId, String thumbnailUrl, String title) {
+	public static Entity addArticle(String userId, String redditArticleId, String articleUrl, String title) {
 		
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		
@@ -58,7 +58,7 @@ public class DBHelper {
 		article.setProperty(DB_TIMELINE_ID, null);
 		article.setProperty(DB_REDDIT_ID, redditArticleId);
 		article.setProperty(DB_SEND_TO_GLASS_DATE, null);
-		article.setProperty(DB_THUMBNAIL_URL, thumbnailUrl);
+		article.setProperty(DB_ARTICLE_URL, articleUrl);
 		article.setProperty(DB_ARTICLE_TITLE, title);
 		
 		datastore.put(article);

@@ -37,8 +37,101 @@ public class Data  implements Serializable  {
 	String created;
 	String after;
 	Media media;
-	String before;	
+	String before;
+	String description;
+	String header_img;
+	String header_title;
+	String description_html;
+	String public_descrition;
+	String accounts_active;
+	int header_size [];
+	int subscribers;
+	String kind;
+	String display_name;
 	
+	
+	
+	
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getHeader_img() {
+		return header_img;
+	}
+
+	public void setHeader_img(String header_img) {
+		this.header_img = header_img;
+	}
+
+	public String getHeader_title() {
+		return header_title;
+	}
+
+	public void setHeader_title(String header_title) {
+		this.header_title = header_title;
+	}
+
+	public String getDescription_html() {
+		return description_html;
+	}
+
+	public void setDescription_html(String description_html) {
+		this.description_html = description_html;
+	}
+
+	public String getPublic_descrition() {
+		return public_descrition;
+	}
+
+	public void setPublic_descrition(String public_descrition) {
+		this.public_descrition = public_descrition;
+	}
+
+	public String getAccounts_active() {
+		return accounts_active;
+	}
+
+	public void setAccounts_active(String accounts_active) {
+		this.accounts_active = accounts_active;
+	}
+
+	public int[] getHeader_size() {
+		return header_size;
+	}
+
+	public void setHeader_size(int[] header_size) {
+		this.header_size = header_size;
+	}
+
+	public int getSubscribers() {
+		return subscribers;
+	}
+
+	public void setSubscribers(int subscribers) {
+		this.subscribers = subscribers;
+	}
+
+	public String getKind() {
+		return kind;
+	}
+
+	public void setKind(String kind) {
+		this.kind = kind;
+	}
+
+	public String getDisplay_name() {
+		return display_name;
+	}
+
+	public void setDisplay_name(String display_name) {
+		this.display_name = display_name;
+	}
+
 	public String getAfter() {
 		return after;
 	}

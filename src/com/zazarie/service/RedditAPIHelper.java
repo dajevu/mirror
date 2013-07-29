@@ -36,6 +36,7 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.glassware.MirrorClient;
 import com.zazarie.domain.GlassRedditCredentialStore;
 import com.zazarie.domain.RedditOauthSession;
+import com.zazarie.domain.reddit.Children;
 import com.zazarie.domain.reddit.Me;
 import com.zazarie.domain.reddit.NewFeed;
 import com.zazarie.domain.reddit.RedditOauth;
@@ -53,7 +54,7 @@ public class RedditAPIHelper {
 	
 	private @Value("${reddit_client_scope}") String redditScope;
 	
-	private static String USER_AGENT = "RedditForGlass v1 by /u/dajevu";
+	private static String USER_AGENT = "RedditForGlass v1 by /u/odawg2p";
 	
 	private GlassRedditCredentialStore store;
 	
@@ -102,7 +103,7 @@ public class RedditAPIHelper {
 		
 		ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
 
-		URL url = new URL("http://www.reddit.com/r/" + subreddit  + "/top.json?limit=" + limit);	
+		URL url = new URL("http://www.reddit.com/r/" + subreddit  + "/hot.json?limit=" + limit);	
 		
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
@@ -126,6 +127,41 @@ public class RedditAPIHelper {
 		
 		return feed;
 	}
+	
+	public static NewFeed getUserArticles(int limit, String accessToken) throws Exception{
+		ObjectMapper mapper = new ObjectMapper();
+		String listOfSubreddits = "";
+		
+		URL subreddits = new URL("https://oauth.reddit.com/reddits/mine/subscriber.json?limit=100");	
+		
+		HttpURLConnection conn = (HttpURLConnection) subreddits.openConnection();
+		conn.setRequestMethod("GET");
+		conn.setDoOutput(true);
+		conn.setRequestProperty("Accept", "application/json");
+		conn.addRequestProperty("Authorization", "Bearer " + accessToken);
+		conn.setRequestProperty("User-Agent", USER_AGENT);
+		conn.connect();
+		
+		if (conn.getResponseCode() != 200) {
+			throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+		}
+		
+		BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+		
+		NewFeed feed = mapper.readValue(br, NewFeed.class);
+		
+		while(feed != null){
+			String tmp;
+			for (Children feeds : feed.getData().getChildren()) {
+				listOfSubreddits += (feeds.getData().getDisplay_name()) + "+";
+			}
+		}
+
+		conn.disconnect();
+		
+		return getArticlesBySubreddit(listOfSubreddits, limit);
+	}
+	
 	
 	public static NewFeed getNewArticles(String accessToken) throws Exception {
 		ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally

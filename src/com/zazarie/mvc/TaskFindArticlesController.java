@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.zazarie.domain.DBHelper;
+import com.zazarie.domain.RedditOauthSession;
 import com.zazarie.domain.reddit.Children;
 import com.zazarie.domain.reddit.NewFeed;
 import com.zazarie.service.MirrorAPIHelper;
@@ -68,8 +69,14 @@ public class TaskFindArticlesController {
 	    	
 	    	NewFeed feeds = null;
 	    	
-	    	feeds = RedditAPIHelper.getArticlesBySubreddit("aww", 10);
-	    	
+	    	if (firstTime) {
+				try {
+						feeds = RedditAPIHelper.getUserArticles(10, ((RedditOauthSession) request.getSession().getAttribute("redditOauthSession")).getAccessToken());
+					} 
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+	    	}
 	    	// for now, I'm only going to call reddit once, instead of for each user. See their API rules
 	    	/*
 	    	if (firstTime) {
